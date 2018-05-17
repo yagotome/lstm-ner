@@ -81,8 +81,9 @@ def create_context_windows(sentences: List[List[Tuple[int, int]]], window_size: 
     array is the context window of the word in the middle and its index in the array is the index of its label in Y
     matrix.
 
-    :param window_size: How much words to the left and to the right.
     :param sentences: Sentences whose words and labels are already tokenized.
+    :param window_size: How much words to the left and to the right.
+    :param padding_idx: Index (token) for padding windows in which the main word has no enough surrounding words.
     :return: X and Y matrices as numpy array.
     """
     x_matrix = []

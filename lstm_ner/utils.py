@@ -9,7 +9,7 @@ def read_input_file(filename: str):
     """
         Reads the input file and creates a list of sentences in which each sentence is a list of its word where the word
         is a 2-dim tuple, whose elements are the word itself and its label (named entity), respectively. Also creates
-        a map of label to index
+        a map of label to index.
 
         Expected files have a sequence of sentences. It has one word by line in first column (in a tab-separated file)
         followed in second column by its label, i.e., the named entity. The sentences are separated by an empty line.
@@ -111,3 +111,23 @@ def create_context_windows(sentences: List[List[Tuple[int, int]]], window_size: 
             y_vector.append(label_idx)
 
     return np.asarray(x_matrix), np.asarray(y_vector)
+
+
+def read_embeddings_file(filename: str):
+    """
+    Reads the embeddings file and maps its words to the index in the embeddings matrix
+    
+    :param filename: Name of the embeddings file
+    :return: Embeddings matrix, map of word to index
+    """
+    word2idx = {}
+    word_idx = 0
+    embeddings = []
+    with open(filename, 'r', encoding='utf-8') as file:
+        for line in file:
+            splits = line.strip().split(' ')
+            word2idx[splits[0]] = word_idx
+            word_idx += 1
+            embeddings.append(np.asarray(splits[1:], dtype='float32'))
+    embeddings = np.asarray(embeddings, dtype='float32')
+    return embeddings, word2idx

@@ -131,3 +131,10 @@ def read_embeddings_file(filename: str):
             embeddings.append(np.asarray(splits[1:], dtype='float32'))
     embeddings = np.asarray(embeddings, dtype='float32')
     return embeddings, word2idx
+
+
+def load_input_output_data(input_data_file: str, word2idx: Dict[str, int], window_size: int):
+    sentences, label2idx = read_input_file(input_data_file)
+    sentences = tokenizer_sentences(sentences, word2idx, label2idx)
+    x, y = create_context_windows(sentences, window_size, word2idx['PADDING'])
+    return x, y, label2idx

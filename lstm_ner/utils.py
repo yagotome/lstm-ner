@@ -54,7 +54,7 @@ def tokenizer_sentences(sentences: List[List[Tuple[str, str]]], word_indices: Di
             return word_indices[normalized]
         return unknown_idx
 
-    return [(word2idx(word), label_indices[label]) for sentence in sentences for word, label in sentence]
+    return [[(word2idx(word), label_indices[label]) for word, label in sentence] for sentence in sentences]
 
 
 def multiple_replace(string, replace_dict):
@@ -116,7 +116,7 @@ def create_context_windows(sentences: List[List[Tuple[int, int]]], window_size: 
 def read_embeddings_file(filename: str):
     """
     Reads the embeddings file and maps its words to the index in the embeddings matrix
-    
+
     :param filename: Name of the embeddings file
     :return: Embeddings matrix, map of word to index
     """

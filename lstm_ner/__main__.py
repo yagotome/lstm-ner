@@ -1,7 +1,7 @@
 from keras.utils import np_utils
 
 from lstm_ner import utils
-from lstm_ner.ner_model import NERModel
+from lstm_ner import ner_model as ner
 
 if __name__ == '__main__':
     # defining hyper parameters
@@ -21,19 +21,17 @@ if __name__ == '__main__':
     # defining model
     input_length = 2 * window_size + 1
     num_labels = len(label2idx)
-    model = NERModel(NERModel.generate_embedding(input_length, weights=word_embeddings), lstm_units,
-                     num_labels, dropout_rate)
+    model = ner.generate_model(ner.generate_embedding(input_length, weights=word_embeddings), lstm_units,
+                           num_labels, dropout_rate)
 
     # summarize the model
-    # TODO: fix issue of summary
-    # print(model.summary())
+    print(model.summary())
 
     # "binarize" labels
     y_train = np_utils.to_categorical(y_train, num_labels)
     y_test = np_utils.to_categorical(y_test, num_labels)
 
     # training and eval
-    model.compile()
     model.fit(x_train, y_train, epochs=epochs)
     loss, accuracy = model.evaluate(x_test, y_test)
     print('Accuracy: %f' % (accuracy * 100))

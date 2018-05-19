@@ -21,7 +21,7 @@ def read_input_file(filename: str):
     sentence = []
     label2idx = {'O': 0}
     label_idx = 1
-    with open(filename, 'r', encoding='utf-8') as file:
+    with open(filename, 'r') as file:
         for line in file:
             line = line.strip()
             if line == "":
@@ -36,6 +36,8 @@ def read_input_file(filename: str):
             if label not in label2idx.keys():
                 label2idx[label] = label_idx
                 label_idx += 1
+    if len(sentence) > 0:
+        sentences.append(sentence)
     return sentences, label2idx
 
 
@@ -67,7 +69,6 @@ def normalize_word(line):
     Transforms line to ASCII string making character translations, except some unicode characters are left because
     they are used in portuguese (such as ß, ä, ü, ö).
     """
-    line = str(line, 'utf-8')
     line = line.replace(u"„", u"\"")
     line = line.lower()
 
@@ -110,7 +111,7 @@ def create_context_windows(sentences: List[List[Tuple[int, int]]], window_size: 
             x_matrix.append(word_indices)
             y_vector.append(label_idx)
 
-    return np.asarray(x_matrix), np.asarray(y_vector)
+    return np.array(x_matrix), np.array(y_vector)
 
 
 def read_embeddings_file(filename: str):
@@ -123,13 +124,18 @@ def read_embeddings_file(filename: str):
     word2idx = {}
     word_idx = 0
     embeddings = []
+    embeddings_dim = None
     with open(filename, 'r', encoding='utf-8') as file:
         for line in file:
             splits = line.strip().split(' ')
+            if embeddings_dim is None:
+                embeddings_dim = len(splits)
+            else:
+                assert embeddings_dim == len(splits)
             word2idx[splits[0]] = word_idx
             word_idx += 1
-            embeddings.append(np.asarray(splits[1:], dtype='float32'))
-    embeddings = np.asarray(embeddings, dtype='float32')
+            embeddings.append(splits[1:])
+    embeddings = np.array(embeddings, dtype=np.float32)
     return embeddings, word2idx
 
 

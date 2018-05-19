@@ -12,12 +12,12 @@ class NERModel(Sequential):
         self.add(Dense(num_labels, activation='softmax'))
 
     def compile(self, **kwargs):
-        super.compile(loss='categorical_crossentropy', optimizer='adagrad')
+        super().compile(loss='categorical_crossentropy', optimizer='adagrad', metrics=['accuracy'])
 
     @staticmethod
-    def generate_embedding(vocab_size: int, embedding_dim: int, window_size: int, weights=None):
-        embedding = Embedding(vocab_size, embedding_dim, input_length=window_size)
+    def generate_embedding(input_length: int, weights=None, vocab_size=0, embedding_dim=0):
         if weights is not None:
-            embedding.set_weights(weights)
-            embedding.trainable = True
-        return embedding
+            vocab_size = weights.shape[0]
+            embedding_dim = weights.shape[1]
+            return Embedding(vocab_size, embedding_dim, input_length=input_length, weights=[weights], trainable=False)
+        return Embedding(vocab_size, embedding_dim, input_length=input_length)

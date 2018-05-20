@@ -123,8 +123,8 @@ def read_embeddings_file(filename: str):
     """
     word2idx = {}
     word_idx = 0
-    char2idx = {'PADDING': 0}
-    char_idx = 1
+    char2idx = {'UNKNOWN': 0, 'PADDING': 1}
+    char_idx = 2
     embeddings = []
     embeddings_dim = None
     with open(filename, 'r', encoding='utf-8') as file:
@@ -146,8 +146,12 @@ def read_embeddings_file(filename: str):
     return embeddings, word2idx, char2idx
 
 
-def load_input_output_data(input_data_file: str, word2idx: Dict[str, int], window_size: int):
+def load_input_output_data(input_data_file: str, word2idx: Dict[str, int], word_window_size: int,
+                           char2idx: Dict[str, int], char_window_size: int):
     sentences, label2idx = read_input_file(input_data_file)
-    sentences = tokenize_sentences(sentences, word2idx, label2idx)
-    x, y = create_context_windows(sentences, window_size, word2idx['PADDING'])
+    word_indexed_sentences = tokenize_sentences(sentences, word2idx, label2idx)
+    char_indexed_sentences = tokenize_sentences(sentences, char2idx, label2idx)
+    x_word, y = create_context_windows(word_indexed_sentences, word_window_size, word2idx['PADDING'])
+    x_char, _ = create_context_windows(char_indexed_sentences, char_window_size, char2idx['PADDING'])
+    x = [x_word, x_char]
     return x, y, label2idx

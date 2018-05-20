@@ -5,9 +5,10 @@ from lstm_ner import ner_model as ner
 
 if __name__ == '__main__':
     # defining hyper parameters
-    word_window_size = 5
+    word_window_size = 3
+    # TODO: Fix issue that disallow word and char window size and embedding dimension being different from each other
     char_window_size = 3
-    char_embeddings_dim = 20
+    char_embeddings_dim = 50
     dropout_rate = 0.5
     lstm_units = 420
     epochs = 100
@@ -16,9 +17,11 @@ if __name__ == '__main__':
     embeddings_file = 'data/word_embeddings.txt'
     word_embeddings, word2idx, char2idx = utils.read_embeddings_file(embeddings_file)
     train_file = 'data/train_data.txt'
-    x_train, y_train, label2idx = utils.load_input_output_data(train_file, word2idx, word_window_size)
+    x_train, y_train, label2idx = utils.load_input_output_data(train_file, word2idx, word_window_size, char2idx,
+                                                               char_window_size)
     test_file = 'data/test_data.txt'
-    x_test, y_test, _ = utils.load_input_output_data(test_file, word2idx, word_window_size)
+    x_test, y_test, _ = utils.load_input_output_data(test_file, word2idx, word_window_size, char2idx,
+                                                     char_window_size)
 
     # defining model
     word_input_length = 2 * word_window_size + 1

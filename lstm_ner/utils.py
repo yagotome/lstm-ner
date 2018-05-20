@@ -41,8 +41,8 @@ def read_input_file(filename: str):
     return sentences, label2idx
 
 
-def tokenizer_sentences(sentences: List[List[Tuple[str, str]]], word_indices: Dict[str, int],
-                        label_indices: Dict[str, int]):
+def tokenize_sentences(sentences: List[List[Tuple[str, str]]], word_indices: Dict[str, int],
+                       label_indices: Dict[str, int]):
     unknown_idx = word_indices['UNKNOWN']
 
     def word2idx(word):
@@ -123,6 +123,8 @@ def read_embeddings_file(filename: str):
     """
     word2idx = {}
     word_idx = 0
+    char2idx = {'PADDING': 0}
+    char_idx = 1
     embeddings = []
     embeddings_dim = None
     with open(filename, 'r', encoding='utf-8') as file:
@@ -132,15 +134,20 @@ def read_embeddings_file(filename: str):
                 embeddings_dim = len(splits)
             else:
                 assert embeddings_dim == len(splits)
-            word2idx[splits[0]] = word_idx
+            word = splits[0]
+            for c in word:
+                if c not in char2idx:
+                    char2idx[c] = char_idx
+                    char_idx += 1
+            word2idx[word] = word_idx
             word_idx += 1
             embeddings.append(splits[1:])
     embeddings = np.array(embeddings, dtype=np.float32)
-    return embeddings, word2idx
+    return embeddings, word2idx, char2idx
 
 
 def load_input_output_data(input_data_file: str, word2idx: Dict[str, int], window_size: int):
     sentences, label2idx = read_input_file(input_data_file)
-    sentences = tokenizer_sentences(sentences, word2idx, label2idx)
+    sentences = tokenize_sentences(sentences, word2idx, label2idx)
     x, y = create_context_windows(sentences, window_size, word2idx['PADDING'])
     return x, y, label2idx

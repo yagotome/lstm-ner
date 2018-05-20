@@ -2,6 +2,7 @@ import re
 from typing import List, Dict, Tuple
 
 import numpy as np
+from keras.preprocessing.sequence import pad_sequences
 from unidecode import unidecode
 
 
@@ -42,21 +43,26 @@ def read_input_file(filename: str):
 
 
 def tokenize_sentences(sentences: List[List[Tuple[str, str]]], word_indices: Dict[str, int],
-                       label_indices: Dict[str, int]):
+                       label_indices: Dict[str, int], char_level=False):
     unknown_idx = word_indices['UNKNOWN']
 
-    def word2idx(word):
-        if word in word_indices:
-            return word_indices[word]
-        lower = word.lower()
+    def tokenize(string):
+        if string in word_indices:
+            return word_indices[string]
+        lower = string.lower()
         if lower in word_indices:
             return word_indices[lower]
-        normalized = normalize_word(word)
+        normalized = normalize_word(string)
         if normalized in word_indices:
             return word_indices[normalized]
         return unknown_idx
 
-    return [[(word2idx(word), label_indices[label]) for word, label in sentence] for sentence in sentences]
+    def create_element(string, label):
+        if char_level:
+            return [tokenize(c) for c in string]
+        return tokenize(string), label_indices[label]
+
+    return [[create_element(word, label) for word, label in sentence] for sentence in sentences]
 
 
 def multiple_replace(string, replace_dict):
@@ -150,8 +156,12 @@ def load_input_output_data(input_data_file: str, word2idx: Dict[str, int], word_
                            char2idx: Dict[str, int], char_window_size: int):
     sentences, label2idx = read_input_file(input_data_file)
     word_indexed_sentences = tokenize_sentences(sentences, word2idx, label2idx)
-    char_indexed_sentences = tokenize_sentences(sentences, char2idx, label2idx)
+    char_indexed_sentences = tokenize_sentences(sentences, char2idx, label2idx, char_level=True)
+    # TODO: Ger max word length from input to use as maxlen
+    char_indexed_sentences = [pad_sequences(char_indexed_sentences[i], maxlen=20, padding='post') for i, _ in
+                              enumerate(sentences)]
     x_word, y = create_context_windows(word_indexed_sentences, word_window_size, word2idx['PADDING'])
+    # TODO: Fix bad char context windows below, creating a new function for char window
     x_char, _ = create_context_windows(char_indexed_sentences, char_window_size, char2idx['PADDING'])
     x = [x_word, x_char]
     return x, y, label2idx

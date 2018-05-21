@@ -129,8 +129,8 @@ def read_embeddings_file(filename: str):
     """
     word2idx = {}
     word_idx = 0
-    char2idx = {'UNKNOWN': 0, 'PADDING': 1}
-    char_idx = 2
+    char2idx = {'UNKNOWN': 0, 'PADDING': 1, 'LEFT_WORDS_PADDING': 2, 'RIGHT_WORDS_PADDING': 3}
+    char_idx = 4
     embeddings = []
     embeddings_dim = None
     with open(filename, 'r', encoding='utf-8') as file:
@@ -152,16 +152,38 @@ def read_embeddings_file(filename: str):
     return embeddings, word2idx, char2idx
 
 
+def create_char_context_windows(sentences: List[List[List[int]]], char2idx: Dict[str, int], word_win_size: int,
+                                max_word_len: int):
+    left_pad = char2idx['LEFT_WORDS_PADDING']
+    right_pad = char2idx['RIGHT_WORDS_PADDING']
+    inner_word_pad = char2idx['PADDING']
+    sentences = [pad_sequences(sentences[i], maxlen=max_word_len, dtype=np.int, value=inner_word_pad, padding='post')
+                 for i, _ in enumerate(sentences)]
+    sentences = [pad_sequences(sentences[i], maxlen=max_word_len + word_win_size, dtype=np.int, value=left_pad,
+                               padding='pre') for i, _ in enumerate(sentences)]
+    sentences = [pad_sequences(sentences[i], maxlen=max_word_len + word_win_size * 2, dtype=np.int, value=right_pad,
+                               padding='post') for i, _ in enumerate(sentences)]
+    padding_word = word_win_size * [left_pad] + max_word_len * [inner_word_pad] + word_win_size * [right_pad]
+
+    padded_words = []
+    for sentence in sentences:
+        for word_idx, word in enumerate(sentence):
+            padded_word_window = np.array([], dtype=np.int)
+            for window_idx in range(word_idx - word_win_size, word_idx + word_win_size + 1):
+                if window_idx < 0 or word_idx > len(sentence):
+                    padded_word_window = np.append(padded_word_window, padding_word)
+                else:
+                    padded_word_window = np.append(padded_word_window, sentence[word_idx])
+            padded_words.append(padded_word_window)
+    return np.array(padded_words)
+
+
 def load_input_output_data(input_data_file: str, word2idx: Dict[str, int], word_window_size: int,
-                           char2idx: Dict[str, int], char_window_size: int):
+                           char2idx: Dict[str, int], max_word_len: int):
     sentences, label2idx = read_input_file(input_data_file)
     word_indexed_sentences = tokenize_sentences(sentences, word2idx, label2idx)
     char_indexed_sentences = tokenize_sentences(sentences, char2idx, label2idx, char_level=True)
-    # TODO: Ger max word length from input to use as maxlen
-    char_indexed_sentences = [pad_sequences(char_indexed_sentences[i], maxlen=20, padding='post') for i, _ in
-                              enumerate(sentences)]
     x_word, y = create_context_windows(word_indexed_sentences, word_window_size, word2idx['PADDING'])
-    # TODO: Fix bad char context windows below, creating a new function for char window
-    x_char, _ = create_context_windows(char_indexed_sentences, char_window_size, char2idx['PADDING'])
+    x_char = create_char_context_windows(char_indexed_sentences, char2idx, word_window_size, max_word_len)
     x = [x_word, x_char]
     return x, y, label2idx

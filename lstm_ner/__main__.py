@@ -7,8 +7,7 @@ if __name__ == '__main__':
     # defining hyper parameters
     word_window_size = 3
     char_window_size = 5
-    # TODO: Fix issue that disallow word and char embedding dimension being different from each other
-    char_embeddings_dim = 50
+    char_embeddings_dim = 20
     dropout_rate = 0.5
     lstm_units = 420
     conv_num = 10
@@ -28,12 +27,11 @@ if __name__ == '__main__':
     # defining model
     word_input_length = 2 * word_window_size + 1
     max_word_len_padded = max_word_len + word_window_size * 2
-    word_embeddings_dim = word_embeddings.shape[1]
     num_labels = len(label2idx)
     word_embedding_model = ner.generate_word_embedding_model(word_input_length, weights=word_embeddings)
     char_embedding_model = ner.generate_char_embedding_model(max_word_len, max_word_len_padded, word_input_length,
-                                                             char_embeddings_dim, word_embeddings_dim, conv_num,
-                                                             char_window_size, vocab_size=len(char2idx))
+                                                             char_embeddings_dim, conv_num, char_window_size,
+                                                             vocab_size=len(char2idx))
     model = ner.generate_model(word_embedding_model, char_embedding_model, lstm_units, num_labels, dropout_rate)
 
     # summarize the model

@@ -187,3 +187,10 @@ def load_input_output_data(input_data_file: str, word2idx: Dict[str, int], word_
     x_char = create_char_context_windows(char_indexed_sentences, char2idx, word_window_size, max_word_len)
     x = [x_word, x_char]
     return x, y, label2idx
+
+
+def save_embeddings(filename, weights, char2idx):
+    with open(filename, 'w', encoding='utf-8') as f:
+        for char, index in char2idx.items():
+            line = f'{char} {" ".join(str(item) for item in weights[index, :])}\n'
+            f.write(line)

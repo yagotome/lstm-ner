@@ -45,3 +45,8 @@ if __name__ == '__main__':
     model.fit(x_train, y_train, epochs=epochs)
     loss, accuracy = model.evaluate(x_test, y_test)
     print('Accuracy: %f' % (accuracy * 100))
+
+    # saving embeddings
+    embedding_layer = char_embedding_model.layers[0]
+    weights = embedding_layer.get_weights()[0]
+    utils.save_embeddings('output/char-embeddings.txt', weights, char2idx)

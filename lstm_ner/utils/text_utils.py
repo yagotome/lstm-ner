@@ -1,4 +1,6 @@
 import string
+from functools import reduce
+
 import nltk
 import re
 from typing import List, Tuple, Dict
@@ -14,6 +16,23 @@ def generate_ngrams_freqdist(text, n):
     tokens = nltk.word_tokenize(text)
     ngrams = nltk.ngrams(tokens, n)
     return nltk.FreqDist(ngrams)
+
+
+def score_ngrams(word_list: List[str], ngrams: nltk.FreqDist, unigrams: nltk.FreqDist, delta: float):
+    """
+    Scores a list of words according to frequency distribution of each word and their ngram.
+    This approach is based on Mikolov, Tomas, et al. "Distributed representations of words and phrases and their
+    compositionality." Advances in neural information processing systems. 2013.
+    :param word_list: the word list to be scored
+    :param ngrams: ngrams freqdist in which n must be the length of word_list
+    :param unigrams: unigrams freqdist
+    :param delta: delta is used as a discounting coefficient and prevents too many phrases consisting of very infrequent
+     words to be formed
+    :return: score of the word_list according to freqdist of ngrams
+    """
+    # filter full of words unigrams so that it has only words that contain in word_list
+    words_unigrams = dict(filter(lambda kv: kv[0][0] in word_list, unigrams.items()))
+    return (ngrams[tuple(word_list)] - delta) / reduce(lambda a, b: a * b, words_unigrams.values())
 
 
 def multiple_replace(_string, replace_dict):

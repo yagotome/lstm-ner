@@ -3,7 +3,7 @@ import os
 from keras.models import load_model
 from keras.utils import np_utils
 
-from lstm_ner import utils
+from lstm_ner.utils import data_utils
 from lstm_ner import ner_model as ner
 
 # defining constants
@@ -25,12 +25,12 @@ if __name__ == '__main__':
     epochs = 100
 
     # loading data from files
-    word_embeddings, word2idx, char2idx = utils.read_embeddings_file(word_embeddings_file)
+    word_embeddings, word2idx, char2idx = data_utils.read_embeddings_file(word_embeddings_file)
     max_word_len = max(map(lambda word: len(word), word2idx.keys()))
-    x_train, y_train, label2idx = utils.load_input_output_data(train_file, word2idx, word_window_size,
-                                                               char2idx, max_word_len)
-    x_test, y_test, _ = utils.load_input_output_data(test_file, word2idx, word_window_size,
-                                                     char2idx, max_word_len)
+    x_train, y_train, label2idx = data_utils.load_input_output_data(train_file, word2idx, word_window_size,
+                                                                    char2idx, max_word_len)
+    x_test, y_test, _ = data_utils.load_input_output_data(test_file, word2idx, word_window_size,
+                                                          char2idx, max_word_len)
     num_labels = len(label2idx)
 
     # "binarize" labels
@@ -61,7 +61,7 @@ if __name__ == '__main__':
         # saving embeddings
         embedding_layer = char_embedding_model.layers[0]
         weights = embedding_layer.get_weights()[0]
-        utils.save_embeddings(char_embeddings_file, weights, char2idx)
+        data_utils.save_embeddings(char_embeddings_file, weights, char2idx)
 
         # saving whole model
         model.save(model_file)

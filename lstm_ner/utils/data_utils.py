@@ -1,9 +1,9 @@
-import re
 from typing import List, Dict, Tuple
 
 import numpy as np
 from keras.preprocessing.sequence import pad_sequences
-from unidecode import unidecode
+
+from lstm_ner.utils import text_utils
 
 
 def read_input_file(filename: str):
@@ -40,55 +40,6 @@ def read_input_file(filename: str):
     if len(sentence) > 0:
         sentences.append(sentence)
     return sentences, label2idx
-
-
-def tokenize_sentences(sentences: List[List[Tuple[str, str]]], word_indices: Dict[str, int],
-                       label_indices: Dict[str, int], char_level=False):
-    unknown_idx = word_indices['UNKNOWN']
-
-    def tokenize(string):
-        if string in word_indices:
-            return word_indices[string]
-        lower = string.lower()
-        if lower in word_indices:
-            return word_indices[lower]
-        normalized = normalize_word(string)
-        if normalized in word_indices:
-            return word_indices[normalized]
-        return unknown_idx
-
-    def create_element(string, label):
-        if char_level:
-            return [tokenize(c) for c in string]
-        return tokenize(string), label_indices[label]
-
-    return [[create_element(word, label) for word, label in sentence] for sentence in sentences]
-
-
-def multiple_replace(string, replace_dict):
-    pattern = re.compile("|".join([re.escape(k) for k, v in replace_dict.items()]), re.M)
-    return pattern.sub(lambda match: replace_dict[match.group(0)], string)
-
-
-def normalize_word(line):
-    """
-    Transforms line to ASCII string making character translations, except some unicode characters are left because
-    they are used in portuguese (such as ß, ä, ü, ö).
-    """
-    line = line.replace(u"„", u"\"")
-    line = line.lower()
-
-    replacements = dict(((u"ß", "SZ"), (u"ä", "AE"), (u"ü", "UE"), (u"ö", "OE")))
-    replacements_inv = dict(zip(replacements.values(), replacements.keys()))
-    line = multiple_replace(line, replacements)
-    line = unidecode(line)
-    line = multiple_replace(line, replacements_inv)
-
-    line = line.lower()  # unidecode might have replaced some characters, like € to upper case EUR
-
-    line = re.sub("([0-9][0-9.,]*)", '0', line)
-
-    return line.strip()
 
 
 def create_context_windows(sentences: List[List[Tuple[int, int]]], window_size: int, padding_idx: int):
@@ -181,8 +132,8 @@ def create_char_context_windows(sentences: List[List[List[int]]], char2idx: Dict
 def load_input_output_data(input_data_file: str, word2idx: Dict[str, int], word_window_size: int,
                            char2idx: Dict[str, int], max_word_len: int):
     sentences, label2idx = read_input_file(input_data_file)
-    word_indexed_sentences = tokenize_sentences(sentences, word2idx, label2idx)
-    char_indexed_sentences = tokenize_sentences(sentences, char2idx, label2idx, char_level=True)
+    word_indexed_sentences = text_utils.tokenize_sentences(sentences, word2idx, label2idx)
+    char_indexed_sentences = text_utils.tokenize_sentences(sentences, char2idx, label2idx, char_level=True)
     x_word, y = create_context_windows(word_indexed_sentences, word_window_size, word2idx['PADDING'])
     x_char = create_char_context_windows(char_indexed_sentences, char2idx, word_window_size, max_word_len)
     x = [x_word, x_char]

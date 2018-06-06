@@ -12,10 +12,11 @@ def remove_punctuations(text):
     return text.translate(translate_table)
 
 
-def generate_ngrams_freqdist(text, n):
-    tokens = nltk.word_tokenize(text)
+def generate_ngrams_freqdist(text, n, tokens=None):
+    if tokens is None:
+        tokens = nltk.word_tokenize(text)
     ngrams = nltk.ngrams(tokens, n)
-    return nltk.FreqDist(ngrams)
+    return nltk.FreqDist(ngrams), tokens
 
 
 def score_ngrams(word_list: List[str], ngrams: nltk.FreqDist, unigrams: nltk.FreqDist, delta: float):
@@ -30,6 +31,7 @@ def score_ngrams(word_list: List[str], ngrams: nltk.FreqDist, unigrams: nltk.Fre
      words to be formed
     :return: score of the word_list according to freqdist of ngrams
     """
+    assert len(word_list) == len(list(ngrams.keys())[0])
     # filter full of words unigrams so that it has only words that contain in word_list
     words_unigrams = dict(filter(lambda kv: kv[0][0] in word_list, unigrams.items()))
     return (ngrams[tuple(word_list)] - delta) / reduce(lambda a, b: a * b, words_unigrams.values())

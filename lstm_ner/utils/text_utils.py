@@ -6,6 +6,8 @@ import re
 from typing import List, Tuple, Dict
 from unidecode import unidecode
 
+nltk.download('punkt')
+
 
 def remove_punctuations(text):
     translate_table = dict((ord(char), None) for char in string.punctuation)

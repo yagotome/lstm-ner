@@ -9,7 +9,7 @@ from unidecode import unidecode
 nltk.download('punkt')
 
 
-def remove_punctuations(text):
+def remove_punctuations(text: str):
     translate_table = dict((ord(char), None) for char in string.punctuation)
     return text.translate(translate_table)
 

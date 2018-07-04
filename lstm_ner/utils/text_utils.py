@@ -35,8 +35,8 @@ def score_ngrams(word_list: List[str], ngrams: nltk.FreqDist, unigrams: nltk.Fre
     """
     assert len(word_list) == len(list(ngrams.keys())[0])
     # filter full of words unigrams so that it has only words that contain in word_list
-    words_unigrams = dict(filter(lambda kv: kv[0][0] in word_list, unigrams.items()))
-    return (ngrams[tuple(word_list)] - delta) / reduce(lambda a, b: a * b, words_unigrams.values())
+    word_unigram_freqs = map(lambda t: t[1], filter(lambda kv: kv[0][0] in word_list, unigrams.items()))
+    return (ngrams[tuple(word_list)] - delta) / reduce(lambda a, b: a*b, word_unigram_freqs, 1)
 
 
 def multiple_replace(_string, replace_dict):

@@ -1,3 +1,5 @@
+import glob
+from builtins import Exception
 from typing import List, Dict, Tuple
 
 import numpy as np
@@ -22,7 +24,7 @@ def read_input_file(filename: str):
     sentence = []
     label2idx = {'O': 0}
     label_idx = 1
-    with open(filename, 'r') as file:
+    with open(filename, 'r', encoding='utf-8') as file:
         for line in file:
             line = line.strip()
             if line == "":
@@ -129,15 +131,31 @@ def create_char_context_windows(sentences: List[List[List[int]]], char2idx: Dict
     return np.array(padded_words)
 
 
-def load_input_output_data(input_data_file: str, word2idx: Dict[str, int], word_window_size: int,
-                           char2idx: Dict[str, int], max_word_len: int):
-    sentences, label2idx = read_input_file(input_data_file)
+def transform_to_xy(sentences: List[List[Tuple[str, str]]], word2idx: Dict[str, int],
+                    label2idx: Dict[str, int], word_window_size: int,
+                    char2idx: Dict[str, int], max_word_len: int):
     word_indexed_sentences = text_utils.tokenize_sentences(sentences, word2idx, label2idx)
     char_indexed_sentences = text_utils.tokenize_sentences(sentences, char2idx, label2idx, char_level=True)
     x_word, y = create_context_windows(word_indexed_sentences, word_window_size, word2idx['PADDING'])
     x_char = create_char_context_windows(char_indexed_sentences, char2idx, word_window_size, max_word_len)
     x = [x_word, x_char]
-    return x, y, label2idx
+    return x, y
+
+
+def load_dataset(input_data_folder: str, test_percent: float):
+    assert 0 <= test_percent <= 1
+    train_data, test_data, label2idx = [], [], {}
+    for filename in glob.glob(f'{input_data_folder}/*.tsv'):
+        sentences, cur_lbl2idx = read_input_file(filename)
+        if len(sentences) == 0:
+            continue
+        label2idx = {**label2idx, **cur_lbl2idx}
+        test_amount = int(len(sentences) * test_percent)
+        thresh_idx = len(sentences) - test_amount
+        train_data += sentences[:thresh_idx]
+        test_data += sentences[thresh_idx:]
+
+    return train_data, test_data, label2idx
 
 
 def save_embeddings(filename, weights, char2idx):

@@ -1,4 +1,5 @@
 import os
+import time
 
 from keras.models import load_model
 from keras.utils import np_utils
@@ -8,29 +9,34 @@ from lstm_ner import ner_model as ner
 
 # defining constants
 word_embeddings_file = 'data/word_embeddings.txt'
-train_file = 'data/train_data.txt'
-test_file = 'data/test_data.txt'
+input_data_folder = 'data'
 model_file = 'output/model.h5'
-char_embeddings_file = 'output/char-embeddings.txt'
+char_embeddings_file = 'output/char_embeddings.txt'
 
 
 if __name__ == '__main__':
     # defining hyper parameters
-    word_window_size = 3
+    word_window_size = 5
     char_window_size = 5
     char_embeddings_dim = 20
     dropout_rate = 0.5
     lstm_units = 420
     conv_num = 10
-    epochs = 100
+    epochs = 50
+    test_percent = 0.2
 
     # loading data from files
     word_embeddings, word2idx, char2idx = data_utils.read_embeddings_file(word_embeddings_file)
     max_word_len = max(map(lambda word: len(word), word2idx.keys()))
-    x_train, y_train, label2idx = data_utils.load_input_output_data(train_file, word2idx, word_window_size,
-                                                                    char2idx, max_word_len)
-    x_test, y_test, _ = data_utils.load_input_output_data(test_file, word2idx, word_window_size,
-                                                          char2idx, max_word_len)
+    train_data, test_data, label2idx = data_utils.load_dataset(input_data_folder, test_percent)
+    start_time = time.time()
+    x_train, y_train = data_utils.transform_to_xy(train_data, word2idx, label2idx, word_window_size,
+                                                  char2idx, max_word_len)
+    print('Elapsed1:', time.time() - start_time)
+    start_time = time.time()
+    x_test, y_test = data_utils.transform_to_xy(test_data, word2idx, label2idx, word_window_size,
+                                                char2idx, max_word_len)
+    print('Elapsed2:', time.time() - start_time)
     num_labels = len(label2idx)
 
     # "binarize" labels

@@ -21,9 +21,30 @@ char_embeddings_dim = 20
 dropout_rate = 0.5
 lstm_units = 420
 conv_num = 10
-epochs = 50
+epochs = 5
 test_percent = 0.2
 not_entity_threshold = 0.7
+
+
+def evaluate_model(predicted, actual):
+    true_pos, true_neg, false_pos, false_neg = [0]*4
+    not_entity_label = 'O'
+    for i, pred in enumerate(predicted):
+        if pred[1] == actual[i][1] == not_entity_label:
+            true_neg += 1
+        elif pred[1] == not_entity_label:
+            false_neg += 1
+        elif pred[1] == actual[i][1]:
+            true_pos += 1
+        else:
+            false_pos += 1
+    print('TP: %d\nTN: %d\nFP: %d\nFN: %d' % (true_pos, true_neg, false_pos, false_neg))
+    accuracy = (true_pos + true_neg) / len(predicted)
+    print('Accuracy: %f' % accuracy)
+    precision = true_pos / (true_pos + false_pos)
+    recall = true_pos / (true_pos + false_neg)
+    f_measure = 2 * precision * recall / (precision + recall)
+    return precision, recall, f_measure
 
 
 def main():
@@ -31,6 +52,8 @@ def main():
     word_embeddings, word2idx, char2idx = data_utils.read_embeddings_file(word_embeddings_file)
     max_word_len = max(map(lambda word: len(word), word2idx.keys()))
     train_data, test_data, label2idx = data_utils.load_dataset(input_data_folder, test_percent)
+    # train_data = train_data[:50]
+    # test_data = test_data[:10]
     x_train, y_train = data_utils.transform_to_xy(train_data, word2idx, label2idx, word_window_size,
                                                   char2idx, max_word_len)
     x_test, y_test = data_utils.transform_to_xy(test_data, word2idx, label2idx, word_window_size,
@@ -67,18 +90,22 @@ def main():
 
         # saving whole model
         model.save(model_file)
+
     # evaluating model
     loss, accuracy = model.evaluate(x_test, y_test)
     print('Accuracy: %f' % (accuracy * 100))
+    # output = model.predict([x_test[0][:15, :], x_test[1][:15, :]])
     output = model.predict(x_test)
-    labeled_output = label_output(output, label2idx, test_data)
-    for word, ent in labeled_output:
-        print(word + '\t' + ent)
-
-
-def label_output(output, label2idx, test_data):
-    classed_output = []
     test_data_flat = reduce(lambda acc, cur: acc + cur, test_data, [])
+    labeled_output = label_output(output, label2idx, test_data_flat)
+    precision, recall, f_measure = evaluate_model(labeled_output, test_data_flat)
+    print('Precision: %f\nRecall: %f\nF1 score: %f' % (precision, recall, f_measure))
+    # for word, ent in labeled_output:
+    #     print(word + '\t' + ent)
+
+
+def label_output(output, label2idx, test_data_flat):
+    classed_output = []
     for i in range(len(output)):
         not_entity_idx = label2idx['O']
         if output[i, not_entity_idx] >= not_entity_threshold:
@@ -97,3 +124,27 @@ def label_output(output, label2idx, test_data):
 
 if __name__ == '__main__':
     main()
+
+#
+# def precision(y_true, y_pred):
+#     """Precision metric.
+#      Only computes a batch-wise average of precision.
+#      Computes the precision, a metric for multi-label classification of
+#     how many selected items are relevant.
+#     """
+#     true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+#     predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+#     precision = true_positives / (predicted_positives + K.epsilon())
+#     return precision
+#
+#
+#  def recall(y_true, y_pred):
+#     """Recall metric.
+#      Only computes a batch-wise average of recall.
+#      Computes the recall, a metric for multi-label classification of
+#     how many relevant items are selected.
+#     """
+#     true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+#     possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+#     recall = true_positives / (possible_positives + K.epsilon())
+#     return recall

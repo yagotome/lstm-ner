@@ -1,17 +1,17 @@
 from keras import Sequential, Model
 from keras.layers import Embedding, LSTM, Dropout, Dense, Reshape, Conv1D, MaxPooling1D, TimeDistributed, \
-    concatenate
+    concatenate, CuDNNLSTM
 
 
 def generate_model(word_embedding_model: Sequential, char_embedding_model: Sequential, lstm_units: int, num_labels: int,
                    dropout_rate=.5):
     merged_input_models = concatenate([word_embedding_model.output, char_embedding_model.output])
     core_model = Sequential()
-    core_model.add(LSTM(lstm_units,
+    core_model.add(CuDNNLSTM(lstm_units,
                         input_shape=(None, word_embedding_model.output_shape[2] + char_embedding_model.output_shape[2]),
                         return_sequences=True))
     core_model.add(Dropout(dropout_rate))
-    core_model.add(LSTM(lstm_units))
+    core_model.add(CuDNNLSTM(lstm_units))
     core_model.add(Dense(num_labels, activation='softmax'))
     core_model_output = core_model(merged_input_models)
     model = Model([word_embedding_model.input, char_embedding_model.input], core_model_output)

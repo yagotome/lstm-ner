@@ -91,8 +91,8 @@ def read_embeddings_file(filename: str):
             splits = line.strip().split(' ')
             if embeddings_dim is None:
                 embeddings_dim = len(splits)
-            else:
-                assert embeddings_dim == len(splits)
+            elif embeddings_dim != len(splits):
+                continue
             word = splits[0]
             for c in word:
                 if c not in char2idx:

@@ -9,7 +9,7 @@ from lstm_ner.utils import data_utils
 from lstm_ner import ner_model as ner
 
 # defining constants
-word_embeddings_file = 'data/word_embeddings.txt'
+word_embeddings_file = 'data/word_embeddings_skipgram_wang2vec_50.txt'
 input_data_folder = 'data'
 model_file = 'output/model.h5'
 char_embeddings_file = 'output/char_embeddings.txt'

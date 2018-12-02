@@ -4,17 +4,25 @@ from keras.layers import Embedding, LSTM, Dropout, Dense, Reshape, Conv1D, MaxPo
 
 
 def generate_model(word_embedding_model: Sequential, char_embedding_model: Sequential, lstm_units: int, num_labels: int,
-                   dropout_rate=.5):
-    merged_input_models = concatenate([word_embedding_model.output, char_embedding_model.output])
-    core_model = Sequential()
-    core_model.add(CuDNNLSTM(lstm_units,
-                        input_shape=(None, word_embedding_model.output_shape[2] + char_embedding_model.output_shape[2]),
+                   dropout_rate=.5, word_embedding_only=False):
+    if word_embedding_only:
+        input_layer_output = [word_embedding_model.output]
+        hidden_layer_input_units = word_embedding_model.output_shape[2]
+        input_layer_model = [word_embedding_model.input]
+    else:        
+        input_layer_output = concatenate([word_embedding_model.output, char_embedding_model.output])
+        hidden_layer_input_units = word_embedding_model.output_shape[2] + char_embedding_model.output_shape[2]
+        input_layer_model = [word_embedding_model.input, char_embedding_model.input]
+    
+    hidden_layer_model = Sequential()
+    hidden_layer_model.add(CuDNNLSTM(lstm_units,
+                        input_shape=(None, hidden_layer_input_units),
                         return_sequences=True))
-    core_model.add(Dropout(dropout_rate))
-    core_model.add(CuDNNLSTM(lstm_units))
-    core_model.add(Dense(num_labels, activation='softmax'))
-    core_model_output = core_model(merged_input_models)
-    model = Model([word_embedding_model.input, char_embedding_model.input], core_model_output)
+    hidden_layer_model.add(Dropout(dropout_rate))
+    hidden_layer_model.add(CuDNNLSTM(lstm_units))
+    hidden_layer_model.add(Dense(num_labels, activation='softmax'))
+    hidden_layer_model_output = hidden_layer_model(input_layer_output)
+    model = Model(input_layer_model, hidden_layer_model_output)
     model.compile(loss='categorical_crossentropy', optimizer='adagrad', metrics=['accuracy'])
     return model
 

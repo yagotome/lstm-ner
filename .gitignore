@@ -1,5 +1,13 @@
-.idea
-data
-__pycache__
-output
-input
+__pycache__/
+*.pyc
+
+# developer environments
+.idea/
+.vscode/
+
+# data and output folders
+lstm_ner/data/*.tsv
+lstm_ner/data/*.txt
+lstm_ner/input/*.txt
+lstm_ner/output/*.txt
+lstm_ner/output/*.h5

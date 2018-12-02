@@ -1,3 +1,12 @@
+"""
+This file is not being used anymore in this solution once that training data has
+already examples of ngrams following CoreNLP pattern so that the model will learn
+ngrams by itselft (due to context windows and embeddings).
+
+This ngrams generator is based on (MIKOLOV, 2013). That paper's code can be found
+at https://code.google.com/p/word2vec/.
+"""
+
 import glob
 import time
 from typing import List
@@ -17,6 +26,11 @@ if __name__ == '__main__':
     for filename in glob.glob(f'{input_path}/*.txt'):
         with open(filename, 'r', encoding='utf-8') as file:
             text += '\n' + file.read()
+    
+    if text == '':
+        print('No input to read. Exiting.')
+        exit(0)
+    
     print('reading file time:', time.time() - start, 's')
 
     start = time.time()

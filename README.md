@@ -23,7 +23,7 @@ An implementation of Named Entity Recognition using LSTM Networks in Keras
 ```
 $ conda create -n lstm-ner python=3.6
 $ conda activate lstm-ner
-$ pip install -r requirements.txt
+$ pip install -r requirements-(cpu|gpu).txt
 ```
 
 
@@ -37,7 +37,7 @@ See [data README](lstm_ner/data/README.md)
 In `lstm_ner` folder, type:
 
 ```
-$ PYTHONPATH=<path/to/lstm-ner> python __main__.py
+$ PYTHONPATH=<path/to/lstm-ner> python __main__.py [--cpu-only]
 ```
 
 PS: Set `PYTHONPATH` variable to `lstm-ner` root directory.

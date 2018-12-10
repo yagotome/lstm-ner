@@ -1,4 +1,5 @@
 import os
+import sys
 
 from functools import reduce
 from typing import Dict, List, Tuple
@@ -136,6 +137,9 @@ def evaluate_model(predicted: List[Tuple[str, str]], actual: List[Tuple[str, str
 
 
 def main():
+    # getting args
+    cpu_only = '--cpu-only' in sys.argv
+
     # loading data from files
     word_embeddings, word2idx, char2idx = data_utils.read_embeddings_file(word_embeddings_file)
     max_word_len = max(map(lambda word: len(word), word2idx.keys()))
@@ -165,7 +169,8 @@ def main():
         char_embedding_model = ner.generate_char_embedding_model(max_word_len, max_word_len_padded, word_input_length,
                                                                  char_embeddings_dim, conv_num, char_window_size,
                                                                  vocab_size=len(char2idx))
-        model = ner.generate_model(word_embedding_model, char_embedding_model, lstm_units, num_labels, dropout_rate)
+        model = ner.generate_model(word_embedding_model, char_embedding_model, lstm_units, num_labels, dropout_rate,
+                                    cpu_only=cpu_only)
 
         # summarize the model
         print(model.summary())

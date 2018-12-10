@@ -33,7 +33,7 @@ def write_mandatory_tokens(input_file, dim):
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
-        print('Bad arguments. You must run this scrip as the following.')
-        print('python prepare_data.py <path/to/file.txt> <embedding_dimesion>')
+        print('Bad arguments. Usage:')
+        print('python prepare_data.py <path/to/file.txt> <embedding_dimension>')
         exit(1)
     write_mandatory_tokens(sys.argv[1], sys.argv[2])

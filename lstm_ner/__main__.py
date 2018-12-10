@@ -188,8 +188,8 @@ def main():
         model.save(model_file)
 
     # evaluating model
-    loss, accuracy = model.evaluate(x_test, y_test)
-    # loss, accuracy = model.evaluate([x_test[0]], y_test)
+    _, accuracy = model.evaluate(x_test, y_test)
+    # _, accuracy = model.evaluate([x_test[0]], y_test)
     print('Accuracy: %f' % (accuracy * 100))
     # output = model.predict([x_test[0][:15, :], x_test[1][:15, :]])
     output = model.predict(x_test)
@@ -197,7 +197,7 @@ def main():
 
     train_data_flat = reduce(lambda acc, cur: acc + cur, train_data, [])
     label_dist = {label: 0 for label in label2idx.keys()}
-    for word, label in train_data_flat:
+    for _, label in train_data_flat:
         label_dist[label] += 1
     print()
     print('####### train label distribution')
